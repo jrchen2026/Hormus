@@ -1,0 +1,340 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0a0c0f;
+  --surface: #111418;
+  --border: #1e2530;
+  --accent: #e8a020;
+  --accent2: #3b7dd8;
+  --danger: #c0392b;
+  --text: #d4d8e0;
+  --muted: #5a6070;
+  --green: #2ecc71;
+  --mono: 'Space Mono', monospace;
+  --body: 'Noto Sans SC', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body, #app {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-weight: 300;
+  min-height: 100vh;
+}
+#app {
+  position: relative;
+  overflow-x: hidden;
+}
+#app::before {
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(232,160,32,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232,160,32,0.03) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+.wrap { max-width:900px; margin:0 auto; padding:0 20px; position:relative; z-index:1; }
+
+/* Header */
+header {
+  border-bottom:1px solid var(--border);
+  padding:16px 0;
+  background:rgba(10,12,15,0.97);
+  backdrop-filter:blur(8px);
+  position:sticky; top:0; z-index:100;
+}
+.hdr { display:flex; align-items:center; justify-content:space-between; }
+.logo-main { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--accent); letter-spacing:2px; }
+.logo-sub { font-size:11px; color:var(--muted); letter-spacing:1px; margin-left:10px; }
+.status-bar { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:11px; }
+.sdot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+/* Risk banner */
+.risk-banner {
+  margin:24px 0 0;
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent);
+  background:var(--surface);
+  padding:16px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.risk-lbl { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.risk-val { font-family:var(--mono); font-size:26px; font-weight:700; color:var(--accent); }
+.risk-sub { font-size:11px; font-family:var(--mono); color:var(--muted); margin-top:4px; }
+.risk-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
+.bars { display:flex; gap:3px; align-items:flex-end; }
+.bar { width:11px; background:var(--border); border-radius:2px; transition:background .3s; }
+
+/* Button */
+.btn {
+  font-family:var(--mono); font-size:11px; letter-spacing:2px; text-transform:uppercase;
+  background:transparent; border:1px solid var(--accent); color:var(--accent);
+  padding:9px 20px; cursor:pointer; transition:all .2s;
+  display:flex; align-items:center; gap:8px;
+}
+.btn:hover:not(:disabled) { background:var(--accent); color:var(--bg); }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+.spin { display:inline-block; }
+.btn.loading .spin { animation:rot 1s linear infinite; }
+@keyframes rot { to { transform:rotate(360deg); } }
+
+/* Error */
+.err { color:var(--danger); font-size:12px; font-family:var(--mono); padding:10px 14px; border:1px solid var(--danger); margin:12px 0; display:none; }
+.err.show { display:block; }
+
+/* Grid */
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0; }
+.card { border:1px solid var(--border); background:var(--surface); padding:18px; }
+.card.full { grid-column:1/-1; }
+.card-title {
+  font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase;
+  margin-bottom:14px; display:flex; align-items:center; gap:8px;
+}
+.card-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* Summary */
+.summary { font-size:13px; line-height:1.85; color:var(--text); white-space:pre-wrap; }
+
+/* Timeline */
+.tl { display:flex; flex-direction:column; }
+.tl-row { display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:12px; line-height:1.5; }
+.tl-row:last-child { border-bottom:none; }
+.tl-t { font-family:var(--mono); font-size:10px; color:var(--accent); min-width:55px; padding-top:2px; flex-shrink:0; }
+.tl-d { width:6px; height:6px; border-radius:50%; background:var(--border); border:1px solid var(--muted); margin-top:5px; flex-shrink:0; }
+.tl-d.hot { background:var(--accent); border-color:var(--accent); }
+.tl-d.danger { background:var(--danger); border-color:var(--danger); }
+
+/* Metrics */
+.metrics { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.metric { border:1px solid var(--border); padding:11px 14px; }
+.m-lbl { font-size:10px; color:var(--muted); font-family:var(--mono); letter-spacing:1px; text-transform:uppercase; margin-bottom:5px; }
+.m-val { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--text); }
+.m-val.up { color:var(--danger); }
+.m-val.neutral { color:var(--accent2); }
+.m-delta { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* Skeleton */
+.sk { background:linear-gradient(90deg,var(--border) 25%,#1e2d40 50%,var(--border) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:2px; height:13px; margin:7px 0; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* Sources */
+.srcs { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.stag { font-family:var(--mono); font-size:10px; color:var(--accent2); border:1px solid var(--accent2); padding:3px 8px; opacity:.7; }
+.ts { font-size:11px; color:var(--muted); font-family:var(--mono); }
+
+/* Footer */
+.footer {
+  border-top:1px solid var(--border); padding:16px 0 32px; margin-top:32px;
+  display:flex; justify-content:space-between;
+  font-family:var(--mono); font-size:10px; color:var(--muted);
+}
+</style>
+
+<div id="app">
+<header>
+  <div class="wrap hdr">
+    <div>
+      <span class="logo-main">HORMUZ WATCH</span>
+      <span class="logo-sub">霍尔木兹海峡情报追踪</span>
+    </div>
+    <div class="status-bar">
+      <div class="sdot" id="sdot"></div>
+      <span id="stxt" style="color:var(--muted)">待机</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="risk-banner">
+    <div>
+      <div class="risk-lbl">当前风险评级</div>
+      <div class="risk-val" id="riskVal">—</div>
+      <div class="risk-sub" id="riskSub">点击右侧按钮获取最新情报</div>
+    </div>
+    <div class="risk-right">
+      <div class="bars" id="bars">
+        <div class="bar" style="height:8px"></div>
+        <div class="bar" style="height:16px"></div>
+        <div class="bar" style="height:24px"></div>
+        <div class="bar" style="height:32px"></div>
+        <div class="bar" style="height:40px"></div>
+      </div>
+      <button class="btn" id="btn" onclick="fetchIntel()">
+        <span class="spin">↻</span> 获取最新情报
+      </button>
+    </div>
+  </div>
+
+  <div class="err" id="err"></div>
+
+  <div class="grid">
+    <div class="card full">
+      <div class="card-title">局势摘要</div>
+      <div class="summary" id="summary">
+        <div class="sk" style="width:95%"></div>
+        <div class="sk" style="width:80%"></div>
+        <div class="sk" style="width:88%"></div>
+        <div class="sk" style="width:70%"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">关键事件时间线</div>
+      <div class="tl" id="tl">
+        <div class="tl-row"><div class="tl-t">—</div><div class="tl-d"></div><span style="color:var(--muted)">等待数据...</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">市场影响指标</div>
+      <div class="metrics">
+        <div class="metric"><div class="m-lbl">原油价格</div><div class="m-val neutral" id="oil">—</div><div class="m-delta" id="oilD">等待数据</div></div>
+        <div class="metric"><div class="m-lbl">航运保费</div><div class="m-val" id="ship">—</div><div class="m-delta" id="shipD">等待数据</div></div>
+        <div class="metric"><div class="m-lbl">每日过境船只</div><div class="m-val" id="vessels">—</div><div class="m-delta" id="vesselsD">等待数据</div></div>
+        <div class="metric"><div class="m-lbl">全球油供占比</div><div class="m-val neutral">~20%</div><div class="m-delta">霍尔木兹基准数据</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:32px">
+    <div class="ts">信息来源</div>
+    <div class="srcs" id="srcs">
+      <span class="stag">REUTERS</span><span class="stag">BLOOMBERG</span><span class="stag">AP NEWS</span><span class="stag">X / TWITTER</span><span class="stag">TANKER TRACKERS</span>
+    </div>
+    <div class="ts" style="margin-top:10px" id="lastUp">尚未获取数据</div>
+  </div>
+
+  <div class="footer">
+    <span>HORMUZ WATCH v1.0</span>
+    <span>由 Claude AI 驱动 · 按需刷新</span>
+  </div>
+</div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are a geopolitical intelligence analyst specializing in the Strait of Hormuz and Middle East energy security.
+Search for the latest news about: Strait of Hormuz, Iran US military, oil tanker shipping, Iranian naval activity, Middle East oil disruption.
+Return ONLY a raw JSON object, no markdown, no code fences:
+{
+  "riskLevel": "LOW|MODERATE|ELEVATED|HIGH|CRITICAL",
+  "riskScore": 1,
+  "riskDesc": "one sentence in Chinese",
+  "summary": "3-4 sentences in Chinese summarizing the current situation",
+  "timeline": [
+    {"time": "date string", "event": "event in Chinese", "severity": "normal|hot|danger"}
+  ],
+  "oilPrice": "$XX/bbl",
+  "oilDelta": "delta string",
+  "shippingRisk": "level string",
+  "shippingDelta": "note in Chinese",
+  "vessels": "~XX/day",
+  "vesselsDelta": "change note in Chinese",
+  "sources": ["source1","source2","source3"]
+}`;
+
+async function fetchIntel() {
+  const btn = document.getElementById('btn');
+  const stxt = document.getElementById('stxt');
+  const sdot = document.getElementById('sdot');
+  const err = document.getElementById('err');
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  stxt.textContent = '搜索中...';
+  stxt.style.color = 'var(--accent)';
+  sdot.style.background = 'var(--accent)';
+  sdot.style.boxShadow = '0 0 6px var(--accent)';
+  err.classList.remove('show');
+
+  document.getElementById('summary').innerHTML = '<div class="sk" style="width:95%"></div><div class="sk" style="width:82%"></div><div class="sk" style="width:88%"></div><div class="sk" style="width:65%"></div>';
+  document.getElementById('tl').innerHTML = '<div class="tl-row"><div class="tl-t sk" style="width:50px;height:10px"></div><div class="tl-d"></div><div class="sk" style="width:180px"></div></div><div class="tl-row"><div class="tl-t sk" style="width:50px;height:10px"></div><div class="tl-d"></div><div class="sk" style="width:200px"></div></div>';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: 'Provide current Strait of Hormuz intelligence briefing. Search for the latest news first.' }]
+      })
+    });
+
+    if (!res.ok) {
+      const e = await res.json();
+      throw new Error(e.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const textBlock = data.content.find(b => b.type === 'text');
+    if (!textBlock) throw new Error('无有效响应');
+
+    let raw = textBlock.text.trim()
+      .replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/i,'').trim();
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('响应格式异常');
+
+    render(JSON.parse(m[0]));
+    stxt.textContent = '已更新';
+    stxt.style.color = 'var(--green)';
+    sdot.style.background = 'var(--green)';
+    sdot.style.boxShadow = '0 0 6px var(--green)';
+
+  } catch(e) {
+    err.textContent = '获取失败：' + e.message;
+    err.classList.add('show');
+    stxt.textContent = '错误';
+    stxt.style.color = 'var(--danger)';
+    sdot.style.background = 'var(--danger)';
+    sdot.style.boxShadow = '0 0 6px var(--danger)';
+    document.getElementById('summary').textContent = '获取失败，请重试。';
+    document.getElementById('tl').innerHTML = '<div class="tl-row"><div class="tl-t">—</div><div class="tl-d"></div><span style="color:var(--muted)">暂无数据</span></div>';
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+function render(d) {
+  const RC = {LOW:'#2ecc71',MODERATE:'#f39c12',ELEVATED:'#e67e22',HIGH:'#e74c3c',CRITICAL:'#c0392b'};
+  const RL = {LOW:'低',MODERATE:'中等',ELEVATED:'偏高',HIGH:'高',CRITICAL:'极高'};
+  const score = Math.min(5, Math.max(1, parseInt(d.riskScore)||1));
+  const col = RC[d.riskLevel] || '#e8a020';
+
+  document.getElementById('riskVal').textContent = RL[d.riskLevel] || d.riskLevel;
+  document.getElementById('riskVal').style.color = col;
+  document.getElementById('riskSub').textContent = d.riskDesc || '';
+
+  document.querySelectorAll('.bar').forEach((b,i) => {
+    b.style.background = i < score ? col : 'var(--border)';
+  });
+
+  document.getElementById('summary').textContent = d.summary || '';
+
+  const tl = document.getElementById('tl');
+  tl.innerHTML = '';
+  (d.timeline||[]).forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'tl-row';
+    row.innerHTML = `<div class="tl-t">${item.time||''}</div><div class="tl-d ${item.severity==='hot'?'hot':item.severity==='danger'?'danger':''}"></div><span>${item.event||''}</span>`;
+    tl.appendChild(row);
+  });
+
+  document.getElementById('oil').textContent = d.oilPrice||'—';
+  document.getElementById('oilD').textContent = d.oilDelta||'';
+  document.getElementById('ship').textContent = d.shippingRisk||'—';
+  document.getElementById('shipD').textContent = d.shippingDelta||'';
+  document.getElementById('vessels').textContent = d.vessels||'—';
+  document.getElementById('vesselsD').textContent = d.vesselsDelta||'';
+
+  if (d.sources?.length) {
+    document.getElementById('srcs').innerHTML = d.sources.map(s=>`<span class="stag">${s.toUpperCase()}</span>`).join('');
+  }
+  document.getElementById('lastUp').textContent = '最后更新：' + new Date().toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}) + ' (北京时间)';
+}
+</script>

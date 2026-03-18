@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hormuz Watch — 霍尔木兹海峡情报追踪</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --border: #1e2530;
+    --accent: #e8a020;
+    --accent2: #3b7dd8;
+    --danger: #c0392b;
+    --text: #d4d8e0;
+    --muted: #5a6070;
+    --green: #2ecc71;
+    --mono: 'Space Mono', monospace;
+    --body: 'Noto Sans SC', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,160,32,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,160,32,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 0;
+    background: rgba(10,12,15,0.95);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .logo-main {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .ts {
+    color: var(--muted);
+    font-size: 11px;
+    font-family: var(--mono);
+  }
+
+  /* Risk banner */
+  .risk-banner {
+    margin: 28px 0 0;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .risk-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .risk-level {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .risk-bars {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+  }
+
+  .risk-bar {
+    width: 12px;
+    background: var(--border);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+
+  /* Main grid */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 20px;
+  }
+
+  .card.full {
+    grid-column: 1 / -1;
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Summary text */
+  .summary-text {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .summary-text .highlight {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Timeline */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .tl-item {
+    display: flex;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .tl-item:last-child { border-bottom: none; }
+
+  .tl-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    min-width: 60px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .tl-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    margin-top: 6px;
+    flex-shrink: 0;
+    border: 1px solid var(--muted);
+  }
+
+  .tl-dot.hot { background: var(--accent); border-color: var(--accent); }
+  .tl-dot.danger { background: var(--danger); border-color: var(--danger); }
+
+  /* Metrics */
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .metric {
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .metric-value.up { color: var(--danger); }
+  .metric-value.neutral { color: var(--accent2); }
+
+  .metric-delta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Button */
+  .refresh-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .refresh-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .refresh-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-icon {
+    display: inline-block;
+    transition: transform 0.6s;
+  }
+
+  .refresh-btn.loading .btn-icon {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Loading skeleton */
+  .skeleton {
+    background: linear-gradient(90deg, var(--border) 25%, #1e2d40 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 2px;
+    height: 14px;
+    margin: 6px 0;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Sources */
+  .sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .source-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    padding: 3px 8px;
+    opacity: 0.7;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 0 40px;
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* Error state */
+  .error-msg {
+    color: var(--danger);
+    font-size: 13px;
+    font-family: var(--mono);
+    padding: 12px;
+    border: 1px solid var(--danger);
+    margin-top: 8px;
+    display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .card.full { grid-column: 1; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .risk-level { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-main">HORMUZ WATCH</span>
+        <span class="logo-sub">霍尔木兹海峡情报追踪</span>
+      </div>
+      <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText" style="color:var(--muted)">待机</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="risk-banner">
+    <div>
+      <div class="risk-label">当前风险评级</div>
+      <div class="risk-level" id="riskLevel">—</div>
+      <div class="ts" id="riskDesc">点击下方按钮获取最新情报</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div class="risk-bars" id="riskBars">
+        <div class="risk-bar" style="height:8px"></div>
+        <div class="risk-bar" style="height:16px"></div>
+        <div class="risk-bar" style="height:24px"></div>
+        <div class="risk-bar" style="height:32px"></div>
+        <div class="risk-bar" style="height:40px"></div>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" onclick="fetchIntel()">
+        <span class="btn-icon">↻</span>
+        获取最新情报
+      </button>
+    </div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="grid">
+
+    <div class="card full">
+      <div class="card-title">局势摘要</div>
+      <div class="summary-text" id="summaryText">
+        <div class="skeleton" style="width:95%"></div>
+        <div class="skeleton" style="width:80%"></div>
+        <div class="skeleton" style="width:88%"></div>
+        <div class="skeleton" style="width:70%"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">关键事件时间线</div>
+      <div class="timeline" id="timeline">
+        <div class="tl-item"><div class="tl-time">—</div><div class="tl-dot"></div><span style="color:var(--muted);font-size:13px">等待数据...</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">市场影响指标</div>
+      <div class="metrics" id="metrics">
+        <div class="metric">
+          <div class="metric-label">原油价格</div>
+          <div class="metric-value neutral" id="oilPrice">—</div>
+          <div class="metric-delta" id="oilDelta">等待数据</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">航运保费</div>
+          <div class="metric-value" id="shippingRisk">—</div>
+          <div class="metric-delta" id="shippingDelta">等待数据</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">每日过境船只</div>
+          <div class="metric-value" id="vessels">—</div>
+          <div class="metric-delta" id="vesselsDelta">等待数据</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">全球油供占比</div>
+          <div class="metric-value neutral">~20%</div>
+          <div class="metric-delta">霍尔木兹基准数据</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-bottom:40px">
+    <div class="ts" style="margin-bottom:8px">信息来源</div>
+    <div class="sources" id="sources">
+      <span class="source-tag">REUTERS</span>
+      <span class="source-tag">BLOOMBERG</span>
+      <span class="source-tag">AP NEWS</span>
+      <span class="source-tag">X / TWITTER</span>
+      <span class="source-tag">TANKER TRACKERS</span>
+    </div>
+    <div class="ts" style="margin-top:12px" id="lastUpdated">尚未获取数据</div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="container" style="display:flex;justify-content:space-between;width:100%">
+    <span>HORMUZ WATCH v1.0</span>
+    <span>由 Claude AI 驱动 · 按需刷新</span>
+  </div>
+</footer>
+
+<script>
+const SYSTEM_PROMPT = `You are a geopolitical intelligence analyst specializing in the Strait of Hormuz and Middle East energy security. 
+Your task is to provide a concise, structured intelligence briefing on the current situation at the Strait of Hormuz.
+
+Search for the latest news about: Strait of Hormuz, Iran US military tension, oil tanker shipping, Iranian naval activity, Middle East oil supply disruption.
+
+Return a JSON object with EXACTLY this structure (no markdown, no code blocks, raw JSON only):
+{
+  "riskLevel": "LOW | MODERATE | ELEVATED | HIGH | CRITICAL",
+  "riskScore": 1-5,
+  "riskDesc": "one sentence summary of current risk",
+  "summary": "3-4 sentence summary of the current situation in Chinese",
+  "timeline": [
+    {"time": "date or 'X hours ago'", "event": "brief event description in Chinese", "severity": "normal|hot|danger"},
+    {"time": "...", "event": "...", "severity": "..."},
+    {"time": "...", "event": "...", "severity": "..."},
+    {"time": "...", "event": "...", "severity": "..."},
+    {"time": "...", "event": "...", "severity": "..."}
+  ],
+  "oilPrice": "e.g. $82.4/bbl",
+  "oilDelta": "e.g. +2.3% this week",
+  "shippingRisk": "e.g. HIGH",
+  "shippingDelta": "brief note on war risk premiums",
+  "vessels": "e.g. ~18/day",
+  "vesselsDelta": "change vs normal",
+  "sources": ["source1", "source2", "source3"]
+}
+
+Use your web search to find the most current information available. Be concise and factual.`;
+
+async function fetchIntel() {
+  const btn = document.getElementById('refreshBtn');
+  const statusText = document.getElementById('statusText');
+  const statusDot = document.getElementById('statusDot');
+  const errorMsg = document.getElementById('errorMsg');
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  statusText.textContent = '搜索中...';
+  statusText.style.color = 'var(--accent)';
+  statusDot.style.background = 'var(--accent)';
+  statusDot.style.boxShadow = '0 0 6px var(--accent)';
+  errorMsg.classList.remove('show');
+
+  // Show skeletons
+  document.getElementById('summaryText').innerHTML = `
+    <div class="skeleton" style="width:95%"></div>
+    <div class="skeleton" style="width:82%"></div>
+    <div class="skeleton" style="width:88%"></div>
+    <div class="skeleton" style="width:65%"></div>
+  `;
+  document.getElementById('timeline').innerHTML = `
+    <div class="tl-item"><div class="tl-time skeleton" style="width:50px;height:10px"></div><div class="tl-dot"></div><div class="skeleton" style="width:200px"></div></div>
+    <div class="tl-item"><div class="tl-time skeleton" style="width:50px;height:10px"></div><div class="tl-dot"></div><div class="skeleton" style="width:180px"></div></div>
+    <div class="tl-item"><div class="tl-time skeleton" style="width:50px;height:10px"></div><div class="tl-dot"></div><div class="skeleton" style="width:220px"></div></div>
+  `;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: 'Provide current Strait of Hormuz intelligence briefing. Search for the latest news first.' }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Extract text content
+    const textBlock = data.content.find(b => b.type === 'text');
+    if (!textBlock) throw new Error('No text response from API');
+
+    // Parse JSON from response
+    let raw = textBlock.text.trim();
+    // Strip markdown fences if present
+    raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+    // Extract JSON object
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Invalid response format');
+
+    const intel = JSON.parse(jsonMatch[0]);
+    renderIntel(intel);
+
+    statusText.textContent = '已更新';
+    statusText.style.color = 'var(--green)';
+    statusDot.style.background = 'var(--green)';
+    statusDot.style.boxShadow = '0 0 6px var(--green)';
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = '获取失败：' + err.message;
+    errorMsg.classList.add('show');
+    statusText.textContent = '错误';
+    statusText.style.color = 'var(--danger)';
+    statusDot.style.background = 'var(--danger)';
+    statusDot.style.boxShadow = '0 0 6px var(--danger)';
+
+    // Restore placeholders
+    document.getElementById('summaryText').textContent = '获取失败，请重试。';
+    document.getElementById('timeline').innerHTML = '<div class="tl-item"><div class="tl-time">—</div><div class="tl-dot"></div><span style="color:var(--muted);font-size:13px">暂无数据</span></div>';
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+function renderIntel(d) {
+  // Risk level
+  const riskColors = { LOW: '#2ecc71', MODERATE: '#f39c12', ELEVATED: '#e67e22', HIGH: '#e74c3c', CRITICAL: '#c0392b' };
+  const riskLabels = { LOW: '低', MODERATE: '中等', ELEVATED: '偏高', HIGH: '高', CRITICAL: '极高' };
+  const score = Math.min(5, Math.max(1, parseInt(d.riskScore) || 1));
+  const color = riskColors[d.riskLevel] || '#e8a020';
+
+  document.getElementById('riskLevel').textContent = riskLabels[d.riskLevel] || d.riskLevel;
+  document.getElementById('riskLevel').style.color = color;
+  document.getElementById('riskDesc').textContent = d.riskDesc || '';
+
+  // Risk bars
+  const bars = document.querySelectorAll('.risk-bar');
+  bars.forEach((bar, i) => {
+    bar.style.background = i < score ? color : 'var(--border)';
+  });
+
+  // Summary
+  document.getElementById('summaryText').textContent = d.summary || '暂无摘要';
+
+  // Timeline
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  if (d.timeline && d.timeline.length) {
+    d.timeline.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'tl-item';
+      div.innerHTML = `
+        <div class="tl-time">${item.time || ''}</div>
+        <div class="tl-dot ${item.severity === 'hot' ? 'hot' : item.severity === 'danger' ? 'danger' : ''}"></div>
+        <span>${item.event || ''}</span>
+      `;
+      tl.appendChild(div);
+    });
+  }
+
+  // Metrics
+  document.getElementById('oilPrice').textContent = d.oilPrice || '—';
+  document.getElementById('oilDelta').textContent = d.oilDelta || '';
+  document.getElementById('shippingRisk').textContent = d.shippingRisk || '—';
+  document.getElementById('shippingDelta').textContent = d.shippingDelta || '';
+  document.getElementById('vessels').textContent = d.vessels || '—';
+  document.getElementById('vesselsDelta').textContent = d.vesselsDelta || '';
+
+  // Sources
+  if (d.sources && d.sources.length) {
+    document.getElementById('sources').innerHTML = d.sources
+      .map(s => `<span class="source-tag">${s.toUpperCase()}</span>`).join('');
+  }
+
+  // Timestamp
+  document.getElementById('lastUpdated').textContent =
+    '最后更新：' + new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) + ' (北京时间)';
+}
+</script>
+
+</body>
+</html>
